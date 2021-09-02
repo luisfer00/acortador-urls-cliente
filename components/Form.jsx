@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import axiosClient from "../config/axios";
 import Error from "./Error";
 
 const Form = ({ serverUrl, slug, setSlug }) => {
+  const [cargando, setCargando] = useState(false);
   const validationSchema = Yup.object().shape({
     url: Yup.string().url("Url invalida").required("La url es obligatoria"),
   });
@@ -16,13 +17,17 @@ const Form = ({ serverUrl, slug, setSlug }) => {
     validationSchema: validationSchema,
     onSubmit: async ({ url }) => {
       try {
+        setCargando(true);
         const data = (
           await axiosClient(serverUrl).post("/api/url", {
             url,
           })
         ).data;
         setSlug(data.slug);
-      } catch (e) {}
+      } catch (e) {
+      } finally {
+        setCargando(false);
+      }
     },
   });
 
@@ -47,9 +52,12 @@ const Form = ({ serverUrl, slug, setSlug }) => {
                 value={formik.values.url}
               />
               <input
-                className="text-white cursor-pointer bg-blue-800 rounded py-2 sm:px-4"
+                className={`text-white cursor-pointer bg-blue-800 rounded py-2 ${
+                  cargando && "opacity-60 cursor-not-allowed"
+                } sm:px-4`}
                 type="submit"
-                value="Crear Url"
+                value={cargando ? "Cargando..." : "Crear Url"}
+                disabled={cargando}
               />
             </div>
           </form>
